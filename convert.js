@@ -203,6 +203,10 @@ function workflow(filename, output, headerRow = 0) {
      }
 
      obj.options = obj.options || {};
+     // Add the keyMap.
+     obj.options.keyMap = {
+         resultsKey: "data"
+     };
      obj.options.nextActions = [];
      // Add the event Action.
      obj.options.nextActions.push(eventAction);
