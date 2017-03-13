@@ -5,7 +5,7 @@
 let convert = require('xls-to-pjson');
 
 // Last parameter is the number pertaining to the header row in the excel file if it exists.
-convert.read('input.xls', 'output.json', 1);
+convert.flat('input.xls', 'output.json', 1);
 ```
 
 ## workflow
