@@ -22,12 +22,15 @@ const eventAction = {
  *
  * @param filename : String - The name of the file to read
  * @param output : String - The name of the json output file
+ * @param isSeries : Boolean - Determine whether to add the actions into a series
  * @param headerRow : Number - The row corresponding to the header of the sheet, defaults to 0
  */
-function flat(filename, output, headerRow = 0) {
-    let file = xlsx.readFile(filename),
-        actions = buildActions(filename, headerRow),
-        sheetNames = file.SheetNames;
+function flat(filename, output, isSeries, headerRow = 0) {
+    let actions = buildActions(filename, headerRow);
+
+    if (isSeries) {
+        actions = series(actions);
+    }
 
     write(output, actions);
 }
@@ -37,17 +40,50 @@ function flat(filename, output, headerRow = 0) {
  *
  * @param filename : String - The name of the excel file
  * @param output : String - The name of the json output file
+ * @param isSeries : Boolean - Determine whether to add the actions into a series
  * @param headerRow : Number - The number pertaining to the header row of the input file
  */
-function workflow(filename, output, headerRow = 0) {
-    let file = xlsx.readFile(filename),
-        actions = buildActions(filename, headerRow),
+function workflow(filename, output, isSeries, headerRow = 0) {
+    let actions = buildActions(filename, headerRow),
         baseObj = actions.splice(0,1)[0];
 
     addNestedActions(baseObj, actions);
 
+    if (isSeries) {
+        baseObj = series([baseObj]);
+    }
+
     write(output, baseObj);
 }
+
+/**
+ * Method to convert an excel spreadsheet into ajax actions within a series
+ *
+ * @param actions : Array of actions to add to the series object
+ *
+ * @return Returns a series action with the inputted actions
+ */
+function series(actions) {
+    let seriesJson = {
+            type: "action",
+            actionType: "series",
+            text: "Start API Actions",
+            options: {
+                actions: actions
+            }
+        };
+
+    return seriesJson;
+}
+
+/**
+ * Method to build an array of actions from an excel spreadsheet.
+ *
+ * @param filename : String - The name of the excel spreadsheet.
+ * @param headerRow : Number - The row corresponding to the header of the sheet
+ *
+ * @return Returns an array of actions
+ */
 
 function buildActions(filename, headerRow) {
     let file = xlsx.readFile(filename),

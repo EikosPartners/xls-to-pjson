@@ -8,6 +8,7 @@ if (argv.h) {
     console.log('           -o : Output filename (JSON)');
     console.log('           -r : The row corresponding to the header in the excel sheet if it exists');
     console.log('   --workflow : Supply this option if you want to create a workflow instead of a flat structure');
+    console.log('     --series : Supply this option if you want to create a series of actions');
     process.exit();
 }
 
@@ -16,8 +17,10 @@ if (!argv.i || !argv.o) {
     process.exit();
 }
 
+let series = argv.series ? true : false;
+
 if (argv.workflow) {
-    convert.workflow(argv.i, argv.o, argv.r);
+    convert.workflow(argv.i, argv.o, series, argv.r);
 } else {
-    convert.flat(argv.i, argv.o, argv.r);
+    convert.flat(argv.i, argv.o, series, argv.r);
 }
