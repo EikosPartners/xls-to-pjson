@@ -139,7 +139,8 @@ function buildActions(filename, headerRow, type) {
                 let A = "A" + i,
                     B = "B" + i,
                     C = "C" + i,
-                    D = "D" + i;
+                    D = "D" + i,
+                    E = "E" + i;
 
                 if (sheet[A]) {
                     action.options.target.name = sheet[A].v;
@@ -163,6 +164,11 @@ function buildActions(filename, headerRow, type) {
                     }
                 } catch (e) {
                     console.error(e);
+                }
+
+                if (sheet[E]) {
+                    // Column E will be the method type, empty is GET.
+                    action.options.target.options.type = sheet[E].v;
                 }
 
                 actions.push(action);
