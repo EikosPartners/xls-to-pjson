@@ -142,6 +142,11 @@ function buildActions(filename, headerRow, type) {
                     D = "D" + i,
                     E = "E" + i;
 
+                // Check if the entire row is empty.
+                if (!sheet[A] && !sheet[B] && !sheet[C] && !sheet[D] && !sheet[E]) {
+                    continue;
+                }
+
                 if (sheet[A]) {
                     action.options.target.name = sheet[A].v;
                 }
