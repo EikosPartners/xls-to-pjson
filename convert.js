@@ -26,73 +26,10 @@ const eventAction = {
  */
 function flat(filename, output, headerRow = 0) {
     let file = xlsx.readFile(filename),
-        actions = [];
+        actions = buildActions(filename, headerRow),
+        sheetNames = file.SheetNames;
 
-    let sheetNames = file.SheetNames;
-
-    console.log(sheetNames);
-
-    sheetNames.forEach( (name) => {
-        let sheet = file.Sheets[name];
-
-        console.log(sheet);
-
-        let numRows = sheet["!range"].e.r;
-
-        for (let i = headerRow + 1; i <= numRows; i++) {
-            let action = {
-                type: "action",
-                actionType: "ajax",
-                options: {
-                    target: {
-                        uri: "",
-                        name: "",
-                        options: {
-                            headers: {
-
-                            }
-                        }
-                    },
-                    params: {
-
-                    }
-                }
-            };
-
-            let A = "A" + i,
-                B = "B" + i,
-                C = "C" + i,
-                D = "D" + i;
-
-            if (sheet[A]) {
-                action.options.target.name = sheet[A].v;
-            }
-
-            if (sheet[B]) {
-                action.options.target.uri = sheet[B].v;
-            }
-
-            try {
-                if (sheet[C]) {
-                    action.options.params = JSON.parse(sheet[C].v);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-
-            try {
-                if (sheet[D]) {
-                    action.options.target.options.headers = JSON.parse(sheet[D].v);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-
-            actions.push(action);
-        }
-
-        write(output, actions);
-    });
+    write(output, actions);
 }
 
 /**
@@ -104,13 +41,22 @@ function flat(filename, output, headerRow = 0) {
  */
 function workflow(filename, output, headerRow = 0) {
     let file = xlsx.readFile(filename),
-        actions = [];
+        actions = buildActions(filename, headerRow),
+        baseObj = actions.splice(0,1)[0];
 
-    let sheetNames = file.SheetNames;
+    addNestedActions(baseObj, actions);
+
+    write(output, baseObj);
+}
+
+function buildActions(filename, headerRow) {
+    let file = xlsx.readFile(filename),
+        actions = [],
+        sheetNames = file.SheetNames;
 
     sheetNames.forEach( (name) => {
-        let sheet = file.Sheets[name];
-        let numRows = sheet["!range"].e.r,
+        let sheet = file.Sheets[name],
+            numRows = sheet["!range"].e.r,
             action = {
                 type: "action",
                 actionType: "ajax",
@@ -131,64 +77,60 @@ function workflow(filename, output, headerRow = 0) {
                 }
             };
 
-        for (let i = headerRow + 1; i <= numRows; i++) {
-            let action = {
-                type: "action",
-                actionType: "ajax",
-                options: {
-                    target: {
-                        uri: "",
-                        name: "",
-                        options: {
-                            headers: {
+            for (let i = headerRow + 1; i <= numRows; i++) {
+                let action = {
+                    type: "action",
+                    actionType: "ajax",
+                    options: {
+                        target: {
+                            uri: "",
+                            name: "",
+                            options: {
+                                headers: {
 
+                                }
                             }
+                        },
+                        params: {
+
                         }
-                    },
-                    params: {
-
                     }
+                };
+
+                let A = "A" + i,
+                    B = "B" + i,
+                    C = "C" + i,
+                    D = "D" + i;
+
+                if (sheet[A]) {
+                    action.options.target.name = sheet[A].v;
                 }
-            };
 
-            let A = "A" + i,
-                B = "B" + i,
-                C = "C" + i,
-                D = "D" + i;
-
-            if (sheet[A]) {
-                action.options.target.name = sheet[A].v;
-            }
-
-            if (sheet[B]){
-                action.options.target.uri = sheet[B].v;
-            }
-
-            try {
-                if (sheet[C]) {
-                    action.options.params = JSON.parse(sheet[C].v);
+                if (sheet[B]){
+                    action.options.target.uri = sheet[B].v;
                 }
-            } catch (e) {
-                console.error(e);
-            }
 
-            try {
-                if (sheet[D]) {
-                    action.options.target.options.headers = JSON.parse(sheet[D].v);
+                try {
+                    if (sheet[C]) {
+                        action.options.params = JSON.parse(sheet[C].v);
+                    }
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error(e);
+
+                try {
+                    if (sheet[D]) {
+                        action.options.target.options.headers = JSON.parse(sheet[D].v);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+
+                actions.push(action);
             }
-
-            actions.push(action);
-        }
-
-        let baseObj = actions.splice(0,1)[0];
-
-        addActions(baseObj, actions);
-
-        write(output, baseObj);
     });
+
+    return actions;
 }
 
 /**
@@ -197,7 +139,7 @@ function workflow(filename, output, headerRow = 0) {
  * @param obj : Object - The object to add the actions too
  * @param actions: Array - The array of actions to add
  */
- function addActions(obj, actions) {
+ function addNestedActions(obj, actions) {
      if (actions.length === 0) {
          return;
      }
@@ -213,7 +155,7 @@ function workflow(filename, output, headerRow = 0) {
      // Add the ajax action.
      obj.options.nextActions.push(actions.splice(0,1)[0]);
 
-     addActions(obj.options.nextActions[1], actions);
+     addNestedActions(obj.options.nextActions[1], actions);
  }
 
 /**
