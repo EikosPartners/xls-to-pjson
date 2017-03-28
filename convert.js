@@ -47,6 +47,8 @@ function workflow(filename, output, isSeries, headerRow = 0) {
     let actions = buildActions(filename, headerRow, 'workflow'),
         baseObj = actions.splice(0,1)[0];
 
+    baseObj.options.errorActions = [eventAction];
+
     addNestedActions(baseObj, actions);
 
     if (isSeries) {
@@ -134,8 +136,6 @@ function buildActions(filename, headerRow, type) {
                     }
                 };
 
-                action.options.mergeid = (type === 'workflow') ? "update_grid_error_actions" : "update_grid_actions";
-
                 let A = "A" + i,
                     B = "B" + i,
                     C = "C" + i,
@@ -176,6 +176,10 @@ function buildActions(filename, headerRow, type) {
                     action.options.target.options.type = sheet[E].v;
                 }
 
+                if (type === 'flat') {
+                    action.options.mergeid = "update_grid_actions";
+                }
+
                 actions.push(action);
             }
     });
@@ -196,16 +200,19 @@ function buildActions(filename, headerRow, type) {
          resultsKey: "data"
      };
      obj.options.nextActions = [];
-     obj.options.errorActions = [eventAction];
      // Add the event Action.
      obj.options.nextActions.push(eventAction);
 
      if (actions.length === 0) {
+         // Add the last mergeid and exit.
+         obj.options.mergeid = "update_grid_error_actions";
          return;
      }
 
      // Add the ajax action.
      obj.options.nextActions.push(actions.splice(0,1)[0]);
+
+     obj.options.mergeid = "update_grid_error_actions";
 
      addNestedActions(obj.options.nextActions[1], actions);
  }
